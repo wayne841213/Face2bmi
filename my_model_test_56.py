@@ -10,9 +10,16 @@ import numpy as np
 
 dataset = pd.read_csv('./normalized_data.csv')
 
-bmi = dataset['bmi']
-dataset['bmi'] = np.round(dataset['bmi'].astype(float)).astype('str')
+y = dataset['bmi']
 
+for n,data in dataset.iterrows():
+    bmi = np.round(float(data['bmi']))
+    if bmi<15:
+        dataset['bmi'][n]=15
+    elif 70<bmi:
+        dataset['bmi'][n]=70
+
+dataset['bmi'] = np.round(dataset['bmi'].astype(float)).astype('str')
 
 Label=[15., 16., 17., 18., 19., 20., 21., 22., 23., 24., 25., 26., 27.,
        28., 29., 30., 31., 32., 33., 34., 35., 36., 37., 38., 39., 40.,
@@ -27,7 +34,7 @@ classes=np.array(Label).astype('str').tolist()
 from keras.models import load_model
 
 
-model = load_model('my_model_56.h5')
+model = load_model('my_model_56_f.h5')
 
 
 model.compile(optimizer='adam',
@@ -56,15 +63,12 @@ validation_generator = test_datagen.flow_from_dataframe(
 nb_validation_samples = len(validation_generator)  
 
 
-loss, acc = model.evaluate_generator(validation_generator,
-                                     steps=nb_validation_samples,
-                                     verbose=1
-                                     )
-
-print('Loss : %f  Accuracy : %f' %(loss,acc))
 
 
-prob = model.predict_generator(validation_generator,steps=nb_validation_samples)
+
+
+prob = model.predict_generator(validation_generator,steps=nb_validation_samples
+                               ,verbose=1)
 
 predict_label = np.argmax(prob, axis=1)
 
@@ -72,11 +76,16 @@ predict_label = np.argmax(prob, axis=1)
 true_label = validation_generator.classes
 
 
+loss, acc = model.evaluate_generator(validation_generator,
+                                     steps=nb_validation_samples,
+                                     verbose=1
+                                     )
+
+print('Loss : %f  Accuracy : %f' %(loss,acc))
+
 #%%
 
 predict=[]
-y=[]
-
 
 for n in predict_label:
     try:
@@ -87,20 +96,15 @@ for n in predict_label:
 predict = np.array(predict).astype(float)
 
 
-for n in true_label:
-    try:
-        y.append(Label[n])
-    except:
-        1
-
-y = np.array(y).astype(float)
-
 tru=0
 for pr,gt in zip(predict,y):
     l=abs(gt-pr)
-    if l/pr < 0.1:
+    if l/gt < 0.1:
         tru+=1
         
 true_rate = tru/nb_validation_samples
 
-print('true_rate : %f' %true_rate)
+if len(predict)!=len(np.array(y)):
+    print('Error: data lengths mismatch.')
+else:
+    print('true_rate : %f' %true_rate)

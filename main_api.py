@@ -81,7 +81,7 @@ Label=[15., 16., 17., 18., 19., 20., 21., 22., 23., 24., 25., 26., 27.,
 classes=np.array(Label).astype('str').tolist()
 
 
-model = load_model('my_model_56_f2.h5')
+model = load_model('my_model_56_f.h5')
 model.compile(optimizer='adam',
               loss='categorical_crossentropy',
               metrics=['acc'])
